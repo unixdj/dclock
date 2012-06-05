@@ -888,10 +888,11 @@ struct tm *now;
 		    *datep++ = (now->tm_mday / 10 + '0');
 		*datep++ = now->tm_mday % 10 + '0';
 	    when 'Y':
-		*datep++ = '1', *datep++ = '9';
+		x = (now->tm_year + 1900) / 100;
+		*datep++ = x / 10 + '0', *datep++ = x % 10 + '0';
 		/* fall thru */
 	    case 'y':
-		*datep++ = now->tm_year / 10 + '0';
+		*datep++ = (now->tm_year%100) / 10 + '0';
 		*datep++ = now->tm_year % 10 + '0';
 	    when '%':
 		*datep++ = *p;
