@@ -3,7 +3,7 @@ SRCS= Dclock.c dclock.c
 OBJS= Dclock.o dclock.o
 HFILES= Dclock.h DclockP.h patchlevel.h
 
-CFLAGS= -O -I/usr/local/include
+CFLAGS= -O -I/usr/local/include -Wall -Werror
 LDFLAGS= -L/usr/local/lib
 LIBS= -lXt -lX11
 

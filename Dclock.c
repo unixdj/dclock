@@ -3,6 +3,7 @@
  * Copyright (c) 1988 Dan Heller <argv@sun.com>
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <X11/IntrinsicP.h>
 #include <X11/Xos.h>
@@ -36,7 +37,7 @@ static Pixmap old_pix[4];
 static int old_digs[4];
 static struct tm before;
 static char *saved_date;
-static cur_position;	/* outline current digit for setting alarm */
+static int cur_position;	/* outline current digit for setting alarm */
 static struct { int hrs, mins; } Alarm;
 
 static char defaultTranslations[] =
@@ -114,7 +115,7 @@ DclockClassRec dclockClassRec = {
     /* num_actions		*/	XtNumber(actionsList),
     /* resources		*/	resources,
     /* resource_count		*/	XtNumber(resources),
-    /* xrm_class		*/	NULL,
+    /* xrm_class		*/	NULLQUARK,
     /* compress_motion		*/	TRUE,
     /* compress_exposure	*/	TRUE,
     /* compress_enterleave	*/	TRUE,
@@ -147,7 +148,7 @@ WidgetClass dclockWidgetClass = (WidgetClass) &dclockClassRec;
  * These stipples give different densities for the
  * different stages of fading.
  */
-static unsigned char stpl_1_8th[] =
+static char stpl_1_8th[] =
 {
     0x80, 0x80, 0x08, 0x08, 0x80, 0x80, 0x08, 0x08,
     0x80, 0x80, 0x08, 0x08, 0x80, 0x80, 0x08, 0x08,
@@ -155,7 +156,7 @@ static unsigned char stpl_1_8th[] =
     0x80, 0x80, 0x08, 0x08, 0x80, 0x80, 0x08, 0x08
 };
 
-static unsigned char stpl_1_4th[] =
+static char stpl_1_4th[] =
 {
     0x88, 0x88, 0x22, 0x22, 0x88, 0x88, 0x22, 0x22,
     0x88, 0x88, 0x22, 0x22, 0x88, 0x88, 0x22, 0x22,
@@ -163,7 +164,7 @@ static unsigned char stpl_1_4th[] =
     0x88, 0x88, 0x22, 0x22, 0x88, 0x88, 0x22, 0x22
 };
 
-static unsigned char stpl_3_8ths[] =
+static char stpl_3_8ths[] =
 {
     0xA2, 0xA2, 0x15, 0x15, 0xA8, 0xA8, 0x45, 0x45,
     0x2A, 0x2A, 0x51, 0x51, 0x8A, 0x8A, 0x54, 0x54,
@@ -171,7 +172,7 @@ static unsigned char stpl_3_8ths[] =
     0x2A, 0x2A, 0x51, 0x51, 0x8A, 0x8A, 0x54, 0x54
 };
 
-static unsigned char stpl_one_half[] =
+static char stpl_one_half[] =
 {
     0x55, 0x55, 0xAA, 0xAA, 0x55, 0x55, 0xAA, 0xAA,
     0x55, 0x55, 0xAA, 0xAA, 0x55, 0x55, 0xAA, 0xAA,
@@ -367,8 +368,8 @@ DclockWidget w;
 
     if (w->dclock.interval_id != (XtIntervalId)NULL)
 	XtRemoveTimeOut(w->dclock.interval_id);
-    XtReleaseGC (w, w->dclock.foreGC);
-    XtReleaseGC (w, w->dclock.backGC);
+    XtReleaseGC ((Widget)w, w->dclock.foreGC);
+    XtReleaseGC ((Widget)w, w->dclock.backGC);
     for (n = 0; n < 10; n++) {
 	XFreePixmap(XtDisplay(w), w->dclock.digits[n]);
 	XFreePixmap(XtDisplay(w), w->dclock.tiny_digits[n]);
@@ -385,10 +386,9 @@ Resize  (w)
 DclockWidget    w;
 {
     int i, digit_w, digit_h;
-    Pixmap pix;
     GC gc = w->dclock.foreGC;
 
-    if (!XtIsRealized(w))
+    if (!XtIsRealized((Widget)w))
 	return;
 
     winwidth = w->core.width;
@@ -450,7 +450,7 @@ DclockWidget    w;
 	    make_number(w, w->dclock.tiny_digits[i], gc, i, tiny_segment_pts);
 	}
 	else
-	    w->dclock.tiny_digits[i] = NULL;
+	    w->dclock.tiny_digits[i] = NULLQUARK;
     }
     /* The colon[0] area is blank */
     if (w->dclock.colon[0])
@@ -629,7 +629,7 @@ DclockWidget    w;
     Boolean save_fade = w->dclock.fade;
     long t;
 
-    if (!XtIsRealized(w))
+    if (!XtIsRealized((Widget)w))
 	return;
 
     if (w->dclock.interval_id != (XtIntervalId)NULL) {
@@ -647,7 +647,7 @@ DclockWidget    w;
     (void) show_time(w);
     w->dclock.scroll = save_scroll;
     w->dclock.fade = save_fade;
-    if (w->dclock.display_time)
+    if (w->dclock.display_time) {
 	if (w->dclock.seconds)
 	    w->dclock.interval_id = XtAddTimeOut((unsigned long)1000, timeout, (XtPointer)w);
 	else {
@@ -655,6 +655,7 @@ DclockWidget    w;
 	    w->dclock.interval_id =
 		XtAddTimeOut((unsigned long)(60 - (t % 60)) * 1000, timeout, (XtPointer)w);
 	}
+    }
 }
 
 static Boolean
@@ -787,7 +788,7 @@ register char *p;
 	unsigned long fade_rate = w->dclock.fade_rate * 1000;
 
 	for (i = 0; i < 4; i++)    /* if pixmaps don't match, fade it */
-	    if (chgd[i] = (new_pix[i] != old_pix[i]))
+	    if ((chgd[i] = (new_pix[i] != old_pix[i])))
 	    {
 		tmp_pix[i] = XCreatePixmap(dpy, win, digit_w, digit_h,
 				DefaultDepthOfScreen(XtScreen(w)));
@@ -802,7 +803,7 @@ register char *p;
 		turn_off[i] = oldmask & ~newmask;
 	    }
 	    else
-		tmp_pix[i] = NULL;
+		tmp_pix[i] = NULLQUARK;
  
 	for (j = 1; j != FADE_ITER; ++j)
 	{
@@ -961,8 +962,8 @@ DclockWidget current, request, new;
     ||  new->dclock.tails != current->dclock.tails
     ||  new->dclock.fade != current->dclock.fade
     ||  new->dclock.miltime != current->dclock.miltime) {
-	XtReleaseGC (current, current->dclock.foreGC);
-	XtReleaseGC (current, current->dclock.backGC);
+	XtReleaseGC ((Widget)current, current->dclock.foreGC);
+	XtReleaseGC ((Widget)current, current->dclock.backGC);
 	GetGC(new);
 	Resize(new); /* pixmaps need to be redrawn */
 	do_redraw = True;
@@ -1007,7 +1008,7 @@ static void
 toggle_bell(w)
 DclockWidget w;
 {
-    if (w->dclock.bell = !w->dclock.bell)
+    if ((w->dclock.bell = !w->dclock.bell))
 	XBell(XtDisplay(w), 50);
 }
 
@@ -1025,7 +1026,7 @@ DclockWidget w;
     Arg arg;
 
     XtSetArg(arg, XtNreverseVideo, !w->dclock.reverse);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
 }
 
 static void
@@ -1039,7 +1040,7 @@ DclockWidget w;
 	return;
     }
     XtSetArg(arg, XtNmilitaryTime, !w->dclock.miltime);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
 }
 
 static void
@@ -1053,7 +1054,7 @@ DclockWidget w;
 	return;
     }
     XtSetArg(arg, XtNseconds, !w->dclock.seconds);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
 }
 
 static void
@@ -1063,7 +1064,7 @@ DclockWidget w;
     Arg arg;
 
     XtSetArg(arg, XtNfade, !w->dclock.fade);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
     if (w->dclock.fade && w->dclock.scroll)
 	toggle_scroll(w);
 }
@@ -1075,7 +1076,7 @@ DclockWidget w;
     Arg arg;
 
     XtSetArg(arg, XtNtails, !w->dclock.tails);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
 }
 
 static void
@@ -1085,7 +1086,7 @@ DclockWidget w;
     Arg arg;
 
     XtSetArg(arg, XtNalarm, !w->dclock.alarm);
-    XtSetValues(w, &arg, 1);
+    XtSetValues((Widget)w, &arg, 1);
 }
 
 static void
@@ -1093,7 +1094,7 @@ set_alarm(w, event)
 DclockWidget w;
 XButtonEvent *event;
 {
-    static saved_secs, saved_miltime;
+    static int saved_secs, saved_miltime;
 
     if (event->button == 3) {
 	if (!(w->dclock.display_time = !w->dclock.display_time)) {
@@ -1112,7 +1113,7 @@ XButtonEvent *event;
 	/* get the digit under the position (1-4) the mouse is over
 	 * and increment (possibly wrap around) to next digit.
 	 */
-	int i, x, y = (int)((BORDER/2)*y_ratio);
+	int i, x;
 	/* first check to see if user toggles the alarm */
 	if (event->y >=
 		winheight - (w->dclock.font->ascent + w->dclock.font->descent))
@@ -1123,7 +1124,7 @@ XButtonEvent *event;
 	    if (event->x < x + w->dclock.digit_w) {
 		if (cur_position == i) {
 		    int digit = w->dclock.alarm_time[i>1?i+1:i] - '0';
-		    int mod;
+		    int mod = 0;
 		    switch (i) {
 			when 0:
 			    if (Alarm.hrs > 13 && digit == 1)

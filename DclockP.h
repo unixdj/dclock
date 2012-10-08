@@ -47,4 +47,4 @@ typedef struct _DclockClassRec {
 
 extern DclockClassRec dclockClassRec;
 
-#endif _XtDclockP_h
+#endif /* _XtDclockP_h */

@@ -19,6 +19,7 @@
  * manager: *Dclock.seconds: on
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <X11/Intrinsic.h>
 #include "Dclock.h"
 
@@ -82,13 +83,14 @@ static XtActionsRec actionsList[] = {
     { "quit",	quit },
 };
 
+int
 main(argc, argv)
 char *argv[];
 {
     Widget toplevel, clock_w;
     char *name, *rindex();
 
-    if (name = rindex(argv[0], '/'))
+    if ((name = rindex(argv[0], '/')))
 	name++;
     else
 	name = argv[0];
@@ -105,4 +107,5 @@ char *argv[];
 
     XtRealizeWidget(toplevel);
     XtMainLoop();
+    return 0;
 }
