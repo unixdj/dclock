@@ -3,8 +3,8 @@ SRCS= Dclock.c dclock.c
 OBJS= Dclock.o dclock.o
 HFILES= Dclock.h DclockP.h patchlevel.h
 
-CFLAGS= -O
-LDFLAGS= 
+CFLAGS= -O -I/usr/local/include
+LDFLAGS= -L/usr/local/lib
 LIBS= -lXt -lX11
 
 dclock: ${OBJS}
