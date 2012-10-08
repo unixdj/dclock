@@ -1,3 +1,7 @@
+DClock from ftp.x.org:/R5contrib/dclock.shar.Z dated 22 Dec 1991,
+patched for y2k (2000) and against compiler warnings (2012).
+
+ -- Vadik
 
 The only added complexity is that systems with no usleep() call
 should compile Dclock.c with -DNO_USLEEP.
