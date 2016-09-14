@@ -85,6 +85,7 @@ static XtActionsRec actionsList[] = {
 
 int
 main(argc, argv)
+int argc;
 char *argv[];
 {
     Widget toplevel, clock_w;
