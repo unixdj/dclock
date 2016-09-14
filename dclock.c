@@ -26,7 +26,7 @@
 static XrmOptionDescRec options[] = {
     {"-date",	 "*Dclock.date",	XrmoptionSepArg, NULL },
     {"-seconds", "*Dclock.seconds",	XrmoptionNoArg, "TRUE" },
-    {"-miltime", "*Dclock.miltime",	XrmoptionNoArg, "TRUE" },
+    {"-miltime","*Dclock.militaryTime",	XrmoptionNoArg, "TRUE" },
     {"-bell",	 "*Dclock.bell",	XrmoptionNoArg, "TRUE" },
     {"-scroll",  "*Dclock.scroll",	XrmoptionNoArg, "TRUE" },
     {"-noscroll","*Dclock.scroll",	XrmoptionNoArg, "FALSE" },
