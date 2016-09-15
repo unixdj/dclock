@@ -926,8 +926,8 @@ XtIntervalId *id;
 {
     Boolean alarm_went_off = show_time(w);
     w->dclock.interval_id =
-	XtAddTimeOut((unsigned long)((alarm_went_off || w->dclock.seconds)? 1000 : 60000),
-			timeout, (XtPointer)w);
+	XtAddTimeOut((unsigned long)((alarm_went_off || w->dclock.seconds) ?
+		1000 : (60 - (time(0) % 60)) * 1000), timeout, (XtPointer)w);
 }
 
 /* ARGSUSED */
